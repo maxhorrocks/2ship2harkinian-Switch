@@ -6,5 +6,5 @@
 	url = https://github.com/HarbourMasters/OTRExporter.git
 [submodule "libultraship"]
 	path = libultraship
-	url = https://github.com/YoshiCrystal9/libultraship.git
-	branch = main-nx
+	url = https://github.com/maxhorrocks/libultraship.git
+	branch = main-nx-5.0.1
