@@ -251,8 +251,10 @@ jobs:
           ${{ runner.os }}-switch-ccache-
     - name: Build 2ship
       run: |
-        cmake -H. -Bbuild-switch -GNinja -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
-        cmake --build build-switch --target 2ship_nro --config Release -j3
+        set -o pipefail
+        aarch64-none-elf-gcc --version | head -1 | sed 's/^/::notice::/'
+        cmake -H. -Bbuild-switch -GNinja -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache 2>&1 | tee cfg.log || { grep -E 'CMake Error|Error' -A3 cfg.log | head -40 | sed 's/^/::error::/'; exit 1; }
+        cmake --build build-switch --target 2ship_nro --config Release -j3 2>&1 | tee build.log || { grep -E 'error|FAILED|undefined reference' build.log | grep -v -- '-Werror' | head -40 | sed 's/^/::error::/'; exit 1; }
         wget -O gamecontrollerdb.txt https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/master/gamecontrollerdb.txt
 
         mv build-switch/mm/*.nro 2ship.nro
