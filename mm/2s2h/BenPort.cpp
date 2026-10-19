@@ -978,7 +978,44 @@ bool VerifyArchiveVersion(ArchiveVersion version) {
     return version.major != INT16_MAX && version.major != gBuildVersionMajor;
 }
 
+#ifdef __SWITCH__
+#include <exception>
+#include <csignal>
+#include <cstdlib>
+static void DiagLog(const char* msg) {
+    FILE* f = fopen("sdmc:/switch/2s2h/diag.log", "a");
+    if (f) { fprintf(f, "%s\n", msg); fclose(f); }
+    if (auto logger = Ship::Context::GetRawInstance() ? Ship::Context::GetRawInstance()->GetLogger() : nullptr) {
+        logger->error("{}", msg);
+        logger->flush();
+    }
+}
+static void DiagTerminate() {
+    std::string msg = "[diag] std::terminate";
+    if (auto ep = std::current_exception()) {
+        try { std::rethrow_exception(ep); }
+        catch (const std::exception& e) { msg += std::string(": ") + typeid(e).name() + ": " + e.what(); }
+        catch (...) { msg += ": unknown exception type"; }
+    }
+    DiagLog(msg.c_str());
+    std::abort();
+}
+static void DiagSignal(int sig) {
+    char buf[64]; snprintf(buf, sizeof(buf), "[diag] signal %d", sig);
+    DiagLog(buf);
+    std::_Exit(1);
+}
+static void DiagAtExit() { DiagLog("[diag] exit() called"); }
+#endif
+
 extern "C" void InitOTR(int argc, char* argv[]) {
+#ifdef __SWITCH__
+    std::set_terminate(DiagTerminate);
+    std::signal(SIGABRT, DiagSignal);
+    std::signal(SIGSEGV, DiagSignal);
+    std::atexit(DiagAtExit);
+    DiagLog("[diag] InitOTR start");
+#endif
     OTRGlobals::Instance = new OTRGlobals();
     OTRGlobals::Instance->RunExtract(argc, argv);
 

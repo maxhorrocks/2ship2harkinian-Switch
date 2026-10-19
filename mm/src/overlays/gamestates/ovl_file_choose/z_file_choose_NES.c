@@ -565,6 +565,20 @@ void FileSelect_PulsateCursor(GameState* thisx) {
 void FileSelect_ConfigModeUpdate(GameState* thisx) {
     FileSelectState* this = (FileSelectState*)thisx;
 
+    {
+
+        static s16 sDiagLastMode = -1;
+
+        if (this->configMode != sDiagLastMode) {
+
+            LUSLOG_INFO("[diag] file select configMode %d -> %d", sDiagLastMode, this->configMode);
+
+            sDiagLastMode = this->configMode;
+
+        }
+
+    }
+
     sConfigModeUpdateFuncs[this->configMode](&this->state);
 }
 
