@@ -2347,6 +2347,10 @@ extern "C" int Controller_ShouldRumble(size_t slot) {
 extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
     Extractor::ShowErrorBox(title, body);
 }
+#else
+extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
+    SPDLOG_ERROR("{}: {}", title, body);
+}
 #endif
 
 // Helper to redirect the user to the boot screen in place of known console crash scenarios, and emits a notification
