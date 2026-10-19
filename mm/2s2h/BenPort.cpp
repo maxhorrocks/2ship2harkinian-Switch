@@ -295,7 +295,9 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
             args.push_back(argv[i]);
         }
     }
+#if !defined(__SWITCH__) && !defined(__WIIU__)
     Extractor extract;
+#endif
     PromptSteps promptStep = PS_FILE_CHECK;
     bool romsFromSearch = false;
     std::atomic<size_t> extractCount = 0, totalExtract = 0;
@@ -305,11 +307,13 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
     std::string file;
 
 #if defined(__SWITCH__)
+    if (shouldRegen) {
     BenGui::RegisterPopup("Outdated ROM Archives",
                           "\x1b[2;2HYou've launched 2Ship with an old ROM O2R file."
                           "\x1b[4;2HPlease regenerate a new ROM O2R and relaunch."
                           "\x1b[6;2HPress the Home button to exit...",
                           "OK", "", [&]() { exit(1); });
+    }
 #elif defined(__WIIU__)
     BenGui::RegisterPopup("Outdated ROM Archives",
                           "You've launched 2Ship with an old a ROM O2R file.\n\n"
@@ -319,6 +323,7 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
     OSFatal();
 #endif
 
+#if !defined(__SWITCH__) && !defined(__WIIU__)
     if (!std::filesystem::exists(installPath + "/assets")) {
         BenGui::RegisterPopup("Extractor assets not found",
                               "No O2R files found. Missing 'assets/' folder needed to generate OTR file.\nPlease "
@@ -336,6 +341,7 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
                                   "OK", "", [&]() { exit(1); });
         }
     }
+#endif
 
     std::shared_ptr<BS::thread_pool> threadPool = std::make_shared<BS::thread_pool>(1);
     std::optional<std::future<void>> extractionTask;
@@ -500,6 +506,10 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
                         continue;
                     }
                     case PS_LOCAL: {
+#if defined(__SWITCH__) || defined(__WIIU__)
+                        extractStep = ES_VERIFY;
+                        continue;
+#else
                         extract = Extractor();
                         extract.SetSearchPath(installPath);
                         extract.GetRoms(args);
@@ -518,8 +528,13 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
                             promptStep = PS_FIRST;
                         }
                         continue;
+#endif
                     }
                     case PS_FIRST: {
+#if defined(__SWITCH__) || defined(__WIIU__)
+                        extractStep = ES_VERIFY;
+                        continue;
+#else
                         if (!extract.ManuallySearchForRomMatchingType(RomSearchMode::Both)) {
                             promptStep = PS_FILE_CHECK;
                             continue;
@@ -532,6 +547,7 @@ void OTRGlobals::RunExtract(int argc, char* argv[]) {
                             totalExtract = 0;
                         });
                         continue;
+#endif
                     }
                     default:
                         break;
@@ -956,10 +972,6 @@ ArchiveVersion DetectArchiveVersion(std::string fileName, bool isO2rType) {
     }
 
     return ReadPortVersionFromArchive(archivePath, isO2rType);
-}
-
-extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
-    Extractor::ShowErrorBox(title, body);
 }
 
 bool VerifyArchiveVersion(ArchiveVersion version) {
