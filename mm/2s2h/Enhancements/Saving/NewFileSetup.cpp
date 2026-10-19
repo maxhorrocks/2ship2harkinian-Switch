@@ -350,7 +350,6 @@ static void RefreshSeedList(void) {
 }
 
 static void ApplySelection(void) {
-    SPDLOG_INFO("[diag] ApplySelection preset={} rando={} seed={}", sPresetIndex, sIsRando, sSeedIndex);
     if ((sPresetIndex > 0) && (sPresetIndex < (s16)sPresetNames.size())) {
         PresetManager_ApplyPresetByName(sPresetNames[sPresetIndex]);
     }
@@ -358,9 +357,7 @@ static void ApplySelection(void) {
     CVarSetInteger("gRando.Enabled", sIsRando ? 1 : 0);
 
     // OnFileCreate reads the pair to decide whether to generate a seed or replay a spoiler
-    SPDLOG_INFO("[diag] SelectSpoiler");
     Rando::Spoiler::SelectSpoiler(sIsRando ? sSeedIndex : 0);
-    SPDLOG_INFO("[diag] CVarSave");
 
     CVarSave();
 }
@@ -387,17 +384,6 @@ extern "C" void FileSelect_UpdateNewFileSetup(GameState* thisx) {
     s16 presetCount = (s16)sPresetNames.size();
 
     sAlpha = (s16)MIN(sAlpha + 25, 255);
-
-    static bool sDiagEntered = false;
-    if (!sDiagEntered) {
-        sDiagEntered = true;
-        SPDLOG_INFO("[diag] UpdateNewFileSetup first frame: presets={} seeds={} row={}", presetCount,
-                    Rando::Spoiler::spoilerOptions.size(), sRow);
-    }
-    if (input->press.button != 0) {
-        SPDLOG_INFO("[diag] setup press=0x{:04X} stick=({},{}) row={}", input->press.button, fileSelect->stickAdjX,
-                    fileSelect->stickAdjY, sRow);
-    }
 
     if (CHECK_BTN_ALL(input->press.button, BTN_B)) {
         Audio_PlaySfx(NA_SE_SY_FSEL_CLOSE);
@@ -520,11 +506,8 @@ void RegisterNewFileSetup() {
         sRow = NEW_FILE_SETUP_ROW_PRESET;
         sAlpha = 0;
         sIsRando = CVarGetInteger("gRando.Enabled", 0) != 0;
-        SPDLOG_INFO("[diag] entering new file setup");
         RefreshPresetList();
-        SPDLOG_INFO("[diag] presets refreshed ({})", sPresetNames.size());
         RefreshSeedList();
-        SPDLOG_INFO("[diag] seeds refreshed ({})", Rando::Spoiler::spoilerOptions.size());
 
         fileSelect->configMode = CM_2S2H_ROTATE_TO_NEW_FILE_SETUP;
         *should = false;
