@@ -596,6 +596,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "NintendoSwitch")
 			OpusFile::opusfile
 			Vorbis::vorbisfile
 			Ogg::ogg
+			-lpng
+			-lz
     )
 	target_include_directories(${PROJECT_NAME} PRIVATE
 #			${DEVKITPRO}/portlibs/switch/include/
