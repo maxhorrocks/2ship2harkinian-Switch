@@ -16,7 +16,6 @@
 #include "2s2h/GameInteractor/GameInteractor.h"
 #include "2s2h_assets.h"
 #include <string.h>
-#include <libultraship/log/luslog.h>
 #include "BenPort.h"
 #include "2s2h/BenGui/CosmeticEditor.h"
 #include <libultraship/bridge/consolevariablebridge.h>
