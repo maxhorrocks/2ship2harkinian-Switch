@@ -24,14 +24,15 @@ void Rando::Spoiler::RefreshOptions() {
     Rando::Spoiler::spoilerOptions.push_back("Generate New Seed");
     s32 spoilerFileIndex = -1;
 
-    // ensure the randomizer folder exists
-    if (!std::filesystem::exists(randomizerFolderPath)) {
-        std::filesystem::create_directory(randomizerFolderPath);
+    // ensure the randomizer folder exists; never let a filesystem error (e.g. on console SD cards) escape
+    std::error_code ec;
+    if (!std::filesystem::exists(randomizerFolderPath, ec)) {
+        std::filesystem::create_directories(randomizerFolderPath, ec);
     }
 
     // Add all files in the randomizer folder to the list of spoiler options
-    for (const auto& entry : std::filesystem::directory_iterator(randomizerFolderPath)) {
-        if (entry.is_regular_file()) {
+    for (const auto& entry : std::filesystem::directory_iterator(randomizerFolderPath, ec)) {
+        if (entry.is_regular_file(ec)) {
             std::string fileName = entry.path().filename().string();
             Rando::Spoiler::spoilerOptions.push_back(fileName);
 
